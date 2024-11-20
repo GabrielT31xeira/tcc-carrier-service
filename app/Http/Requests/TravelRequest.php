@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class TravelRequest extends FormRequest
 {
@@ -76,5 +78,9 @@ class TravelRequest extends FormRequest
             'veiculo.ano_fabricacao.min' => 'O ano de fabricação deve ser no mínimo 1900.',
             'veiculo.ano_fabricacao.max' => 'O ano de fabricação não pode ser maior que o ano atual.',
         ];
+    }
+
+    protected function failedValidation(Validator $validator) {
+        throw new HttpResponseException(response()->json($validator->errors(), 422));
     }
 }

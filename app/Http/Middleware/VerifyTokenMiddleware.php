@@ -21,7 +21,6 @@ class VerifyTokenMiddleware
 
         $data = json_decode($response->getStatusCode(), true);
         if ($data == 200) {
-            dd($data);
             return $next($request);
         }
         return response()->json([
