@@ -51,6 +51,7 @@ class TravelController extends Controller
 
     public function store(TravelRequest $request, $user_id)
     {
+        dd($user_id);
         try {
             $validated = $request->validated();
             DB::beginTransaction();
