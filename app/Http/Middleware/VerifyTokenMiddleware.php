@@ -10,7 +10,6 @@ class VerifyTokenMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        dd($request);
         $client = new Client();
         $token = $request->bearerToken();
         $response = $client->request('GET', 'http://54.198.88.58:82/api/verify-token', [
@@ -22,6 +21,7 @@ class VerifyTokenMiddleware
 
         $data = json_decode($response->getStatusCode(), true);
         if ($data == 200) {
+            dd($data);
             return $next($request);
         }
         return response()->json([
