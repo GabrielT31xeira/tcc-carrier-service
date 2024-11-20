@@ -10,6 +10,7 @@ class VerifyTokenMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
+        dd($request);
         $client = new Client();
         $token = $request->bearerToken();
         $response = $client->request('GET', 'http://54.198.88.58:82/api/verify-token', [
