@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/travel/{travel_id}/compatible', [\App\Http\Controllers\api\IntercessionController::class, 'findRoutes'])->middleware('verify-token');
 Route::get('/travel/{user_id}', [\App\Http\Controllers\api\TravelController::class, 'getTravel'])->middleware('verify-token');
 Route::get('/travel-all/{travel_id}', [\App\Http\Controllers\api\TravelController::class, 'getAllTravels'])->middleware('verify-token');
 Route::post('/travel/{user_id}/store', [\App\Http\Controllers\api\TravelController::class, 'store'])->middleware('verify-token');
