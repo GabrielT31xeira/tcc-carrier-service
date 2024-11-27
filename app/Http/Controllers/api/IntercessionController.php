@@ -2,84 +2,174 @@
 
 namespace App\Http\Controllers\api;
 
-use App\Http\Algorithm\Dijkstra;
 use App\Http\Controllers\Controller;
 use App\Models\Travel;
-use App\Services\GoogleMapsService;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 
 class IntercessionController extends Controller
 {
-    protected $googleMaps;
 
-    public function __construct(GoogleMapsService $googleMaps)
+    private $googleApiKey = 'AIzaSyBscAm8DFRRyyGsyCWcINDhYt03PYmPwDg';
+
+    private function getRouteFromGoogleMaps($origin, $destination)
     {
-        $this->googleMaps = $googleMaps;
+        $client = new Client();
+        $url = "https://maps.googleapis.com/maps/api/directions/json";
+
+        $response = $client->get($url, [
+            'query' => [
+                'origin' => $origin,
+                'destination' => $destination,
+                'key' => $this->googleApiKey,
+            ],
+        ]);
+
+        $data = json_decode($response->getBody(), true);
+
+        if ($data['status'] === 'OK') {
+            $distance = $data['routes'][0]['legs'][0]['distance']['value']; // Distância em metros
+            return $distance / 1000; // Retorna em quilômetros
+        }
+
+        return null; // Retorna null se a rota não for encontrada
     }
 
     public function findRoutes(Request $request, $travel_id)
     {
-        try {
-            $client = new Client();
-            $token = $request->bearerToken();
-            $response = $client->request('GET', 'http://35.174.5.208:83/api/all-travel', [
-                'headers' => [
-                    'Authorization' => 'Bearer ' . $token,
-                    'Accept' => 'application/json',
-                ],
-            ]);
-            $data = json_decode($response->getBody(), true);
-            $packages = $data['travel'];
-            $traveler = Travel::where('id_travel', '=', $travel_id)
-                ->with(['arrival', 'output'])->get()->first();
+        $client = new \GuzzleHttp\Client();
+        $token = $request->bearerToken();
 
-            $graph = $this->buildGraph($packages);
+        // Obtenha as viagens disponíveis
+        $response = $client->request('GET', 'http://35.174.5.208:83/api/all-travel', [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $token,
+                'Accept' => 'application/json',
+            ],
+        ]);
 
-            $dijkstra = new Dijkstra($graph);
+        $data = json_decode($response->getBody(), true);
+        $availableTravels = $data['travel'];
 
-            $matches = [];
+        // Obtenha a viagem do viajante
+        $traveler = Travel::where('id_travel', $travel_id)
+            ->with(['arrival', 'output'])
+            ->first();
 
-            $travelerPath = $dijkstra->shortestPath($traveler['output_id'], $traveler['arrival_id']);
+        if (!$traveler) {
+            return response()->json(['error' => 'Travel not found'], 404);
+        }
 
-            foreach ($packages as $package) {
-                if ($traveler['id_travel'] !== $package['id_travel']) {
-                    $packagePath = $dijkstra->shortestPath($package['output_id'], $package['arrival_id']);
+        // Criar o grafo com base no Google Maps
+        $grafo = [];
+        // Adicionar nós para o viajante
+        $startCity = $traveler->output->id_output;
+        $endCity = $traveler->arrival->id_arrival;
 
-                    if ($this->isRouteFeasible($travelerPath, $packagePath)) {
-                        $matches[] = [
-                            'traveler' => $traveler,
-                            'package' => $package,
-                        ];
-                    }
-                }
+        // Garantir que os nós de início e fim do viajante existam no grafo
+        $grafo[$startCity] = [];
+        $grafo[$endCity] = [];
+
+        // Conectar ponto de saída do viajante aos pontos de saída dos pacotes
+        foreach ($availableTravels as $travel) {
+            $from = $travel['output'];
+            $to = $travel['arrival'];
+
+            $fromId = $from['id_output'];
+            $toId = $to['id_arrival'];
+
+            $origin = "{$from['latitude']},{$from['longitude']}";
+            $destination = "{$to['latitude']},{$to['longitude']}";
+
+            // Calcular distância entre o ponto de saída do viajante e o ponto de saída do pacote
+            $distanceToPackage = $this->getRouteFromGoogleMaps("{$traveler->output->latitude},{$traveler->output->longitude}", $origin);
+            if ($distanceToPackage !== null) {
+                $grafo[$startCity][$fromId] = $distanceToPackage;
             }
 
-            return response()->json($matches);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'An error has occurred',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+            // Adicionar distância entre os pontos de saída e chegada do pacote
+            $distancePackage = $this->getRouteFromGoogleMaps($origin, $destination);
+            if ($distancePackage !== null) {
+                $grafo[$fromId][$toId] = $distancePackage;
+            }
 
-    private function buildGraph($packages)
-    {
-        $graph = [];
-        foreach ($packages as $package) {
-            $distance = $this->googleMaps->getDistance(
-                "{$package['output']['latitude']},{$package['output']['longitude']}",
-                "{$package['arrival']['latitude']},{$package['arrival']['longitude']}"
-            );
-            $graph[$package['output_id']][$package['arrival_id']] = $distance;
+            // Conectar ponto de chegada do pacote ao ponto de chegada do viajante
+            $distanceToDestination = $this->getRouteFromGoogleMaps($destination, "{$traveler->arrival->latitude},{$traveler->arrival->longitude}");
+            if ($distanceToDestination !== null) {
+                $grafo[$toId][$endCity] = $distanceToDestination;
+            }
         }
 
-        return $graph;
+        // Calcular as distâncias usando Dijkstra
+        $distances = $this->dijkstra($grafo, $startCity);
+
+        // Verificar se há caminho disponível para o destino final
+        if (!isset($distances[$endCity]) || $distances[$endCity] === INF) {
+            return response()->json(['error' => 'No deliverable package found for this trip.'], 404);
+        }
+
+        // Filtrar entregas viáveis com a nova regra
+        $reachableTravels = collect($availableTravels)->filter(function ($travel) use ($distances, $startCity, $endCity) {
+            $packageStart = $travel['output']['id_output'];
+            $packageEnd = $travel['arrival']['id_arrival'];
+
+            // Verificar se os pontos do pacote estão alcançáveis
+            if (!isset($distances[$packageStart]) || !isset($distances[$packageEnd])) {
+                return false;
+            }
+
+            // Calcular o aumento de distância causado pelo pacote
+            $originalDistance = $distances[$endCity];
+            $distanceWithPackage = $distances[$packageStart] + $distances[$packageEnd];
+
+            // Verificar se o aumento é maior que 100 km
+            $distanceIncrease = $distanceWithPackage - $originalDistance;
+            dd($distanceIncrease);
+            return $distanceIncrease <= 700; // Permitir somente pacotes que aumentem até 100 km
+        });
+
+        // Retornar os pacotes filtrados
+        return response()->json($reachableTravels->values());
     }
 
-    private function isRouteFeasible($travelerPath, $packagePath)
-    {
-        return !array_diff($packagePath, $travelerPath);
+    function dijkstra($graph, $start) {
+        $distances = [];
+        $previous = [];
+        $queue = [];
+
+        foreach ($graph as $vertex => $edges) {
+            $distances[$vertex] = INF;
+            $previous[$vertex] = null;
+            $queue[$vertex] = INF;
+        }
+
+        $distances[$start] = 0;
+        $queue[$start] = 0;
+
+        while (!empty($queue)) {
+            asort($queue);
+            $current = key($queue);
+            unset($queue[$current]);
+
+            if ($distances[$current] === INF) {
+                break;
+            }
+
+            foreach ($graph[$current] as $neighbor => $cost) {
+                $alt = $distances[$current] + $cost;
+
+                if (!isset($distances[$neighbor])) {
+                    dd("Vértice não encontrado no grafo: {$neighbor}");
+                }
+
+                if ($alt < $distances[$neighbor]) {
+                    $distances[$neighbor] = $alt;
+                    $previous[$neighbor] = $current;
+                    $queue[$neighbor] = $alt;
+                }
+            }
+        }
+
+        return $distances;
     }
 }
