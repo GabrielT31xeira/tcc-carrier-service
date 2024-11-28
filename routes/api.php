@@ -14,8 +14,19 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/travel/{travel_id}/compatible', [\App\Http\Controllers\api\IntercessionController::class, 'findRoutes'])->middleware('verify-token');
-Route::get('/travel/{user_id}', [\App\Http\Controllers\api\TravelController::class, 'getTravel'])->middleware('verify-token');
-Route::get('/travel-all/{travel_id}', [\App\Http\Controllers\api\TravelController::class, 'getAllTravels'])->middleware('verify-token');
-Route::post('/travel/{user_id}/store', [\App\Http\Controllers\api\TravelController::class, 'store'])->middleware('verify-token');
-Route::delete('/travel/{travel_id}', [\App\Http\Controllers\api\TravelController::class, 'deleteTravel'])->middleware('verify-token');
+Route::middleware('verify-token')->group(function () {
+    // Travel routes
+    Route::prefix('travel')->group(function () {
+        Route::get('{travel_id}/compatible', [\App\Http\Controllers\api\IntercessionController::class, 'findRoutes']);
+        Route::get('{user_id}', [\App\Http\Controllers\api\TravelController::class, 'getTravel']);
+        Route::get('all/{travel_id}', [\App\Http\Controllers\api\TravelController::class, 'getAllTravels']);
+        Route::post('{user_id}/store', [\App\Http\Controllers\api\TravelController::class, 'store']);
+        Route::delete('{travel_id}', [\App\Http\Controllers\api\TravelController::class, 'deleteTravel']);
+    });
+
+    // Proposal routes
+    Route::post('client/{client_travel_id}/carrier/{travel_id}', [\App\Http\Controllers\api\ProposalController::class, 'proposal']);
+    Route::get('carrier/{travel_id}/proposal', [\App\Http\Controllers\api\ProposalController::class, 'getCarrierProposal']);
+    Route::get('client/{client_travel_id}/proposal', [\App\Http\Controllers\api\ProposalController::class, 'getClientProposal']);
+    Route::patch('proposal/{id}/accept', [\App\Http\Controllers\api\ProposalController::class, 'acceptProposal']);
+});

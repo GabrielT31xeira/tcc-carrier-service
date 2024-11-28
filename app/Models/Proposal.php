@@ -16,7 +16,6 @@ class Proposal extends Model
     protected $table = 'proposal';
     protected $fillable = [
         'client_travel_id',
-        'travel_id',
         'accepted',
         'date_arrival',
         'date_output',
@@ -25,6 +24,6 @@ class Proposal extends Model
 
     public function travel(): BelongsToMany
     {
-        return $this->belongsToMany(Travel::class, 'travel_proposal', 'id_travel', 'travel_id');
+        return $this->belongsToMany(Travel::class, 'travel_proposal', 'proposal_id', 'travel_id');
     }
 }

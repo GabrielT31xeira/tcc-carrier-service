@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use App\traits\UUID;
+use GuzzleHttp\Client;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Travel extends Model
@@ -36,8 +38,8 @@ class Travel extends Model
         return $this->hasOne(Output::class, 'id_output', 'output_id');
     }
 
-    public function proposal(): BelongsToMany
+    public function proposal(): hasMany
     {
-        return $this->belongsToMany(Proposal::class, 'travel_proposal', 'id_proposal', 'proposal_id');
+        return $this->hasMany(Proposal::class, 'travel_id');
     }
 }
