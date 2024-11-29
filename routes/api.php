@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('verify-token')->group(function () {
+    Route::get('travel/{travel_id}/compatible', [\App\Http\Controllers\api\IntercessionController::class, 'findRoutes']);
     // Travel routes
     Route::prefix('travel')->group(function () {
-        Route::get('/{travel_id}/compatible', [\App\Http\Controllers\api\IntercessionController::class, 'findRoutes']);
         Route::get('{user_id}', [\App\Http\Controllers\api\TravelController::class, 'getTravel']);
         Route::get('all/{travel_id}', [\App\Http\Controllers\api\TravelController::class, 'getAllTravels']);
         Route::post('{user_id}/store', [\App\Http\Controllers\api\TravelController::class, 'store']);
