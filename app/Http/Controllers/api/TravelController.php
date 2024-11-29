@@ -35,7 +35,7 @@ class TravelController extends Controller
     {
         try {
             $travel = Travel::where('user_id', $user_id)
-                ->with(['arrival', 'output', 'vehicle']);
+                ->with(['arrival', 'output', 'vehicle'])->get();
 
             return response()->json([
                 'travel' => $travel
