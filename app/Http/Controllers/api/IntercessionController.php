@@ -128,7 +128,9 @@ class IntercessionController extends Controller
         });
 
         // Retornar os pacotes filtrados
-        return response()->json($reachableTravels->values());
+        return response()->json([
+            'travels' => $reachableTravels->values()
+        ]);
     }
 
     function dijkstra($graph, $start) {
