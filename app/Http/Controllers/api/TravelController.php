@@ -104,6 +104,7 @@ class TravelController extends Controller
     public function deleteTravel($travel_id)
     {
         try {
+            DB::beginTransaction();
             $travel = Travel::find($travel_id);
 
             if ($travel) {
@@ -112,12 +113,14 @@ class TravelController extends Controller
                 $travel->vehicle()->delete();
 
                 $travel->delete();
-
+                DB::commit();
                 return response()->json(['message' => 'Entrega apagada com sucesso!']);
             } else {
+                DB::rollBack();
                 return response()->json(['message' => 'Entrega não encontrada!']);
             }
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'message' => 'An error has occurred',
                 'error' => $e->getMessage()
