@@ -46,14 +46,40 @@ class ProposalController extends Controller
 
     public function getUserProposals($user_id)
     {
-        $proposals = DB::table('proposal')
-            ->join('travel_proposal', 'proposal.id_proposal', '=', 'travel_proposal.proposal_id')
-            ->join('travel', 'travel_proposal.travel_id', '=', 'travel.id_travel')
-            ->where('travel.user_id', $user_id)
-            ->select('proposal.*')
-            ->get();
+        try {
+            $proposals = DB::table('proposal')
+                ->join('travel_proposal', 'proposal.id_proposal', '=', 'travel_proposal.proposal_id')
+                ->join('travel', 'travel_proposal.travel_id', '=', 'travel.id_travel')
+                ->join('output', 'travel.output_id', '=', 'output.id_output')
+                ->join('arrival', 'travel.arrival_id', '=', 'arrival.id_arrival')
+                ->join('vehicle', 'travel.vehicle_id', '=', 'vehicle.id_vehicle')
+                ->where('travel.user_id', $user_id)
+                ->select(
+                    'proposal.*',
+                    'output.city as output_city', 'output.state as output_state', 'output.address as output_address',
+                    'arrival.city as arrival_city', 'arrival.state as arrival_state', 'arrival.address as arrival_address',
+                    'vehicle.plate as vehicle_plate', 'vehicle.vehicle_type as vehicle_type', 'vehicle.brand as vehicle_brand', 'vehicle.model as vehicle_model', 'vehicle.model_year as vehicle_model_year'
+                )
+                ->get();
 
-        return response()->json($proposals);
+            $acceptedProposals = $proposals->filter(function ($proposal) {
+                return $proposal->accepted;
+            });
+
+            $notAcceptedProposals = $proposals->filter(function ($proposal) {
+                return !$proposal->accepted;
+            });
+
+            return response()->json([
+                'accepted_proposals' => $acceptedProposals,
+                'not_accepted_proposals' => $notAcceptedProposals,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error has occurred',
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
     public function getCarrierProposal(Request $request, $travel_id)
