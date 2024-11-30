@@ -239,15 +239,25 @@ class ProposalController extends Controller
         }
     }
 
-    public function acceptProposal($proposal_id)
+    public function acceptProposal(Request $request, $proposal_id)
     {
         try {
 
             DB::beginTransaction();
 
-            $proposal = Proposal::findOrFail($proposal_id);
+            $proposal = Proposal::where('id_proposal', '=', $proposal_id)->first();
 
             $proposal->update(['accepted' => true]);
+
+            $client = new Client();
+
+            $bearerToken = $request->bearerToken();
+            $client->request('PATCH', 'http://35.174.5.208:83/api/travel/' . $proposal->client_travel_id . '/update', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $bearerToken,
+                    'Accept' => 'application/json',
+                ],
+            ]);
 
             Proposal::where('client_travel_id', $proposal->client_travel_id)
                 ->where('id_proposal', '!=', $proposal_id)
