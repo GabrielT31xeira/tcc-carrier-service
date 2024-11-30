@@ -242,22 +242,31 @@ class ProposalController extends Controller
     public function acceptProposal(Request $request, $proposal_id)
     {
         try {
-
             DB::beginTransaction();
 
             $proposal = Proposal::where('id_proposal', '=', $proposal_id)->first();
 
+            if (!$proposal) {
+                return response()->json([
+                    'message' => 'Proposta não encontrada.',
+                ], 404);
+            }
+
             $proposal->update(['accepted' => true]);
 
             $client = new Client();
-
             $bearerToken = $request->bearerToken();
-            $client->request('PATCH', 'http://35.174.5.208:83/api/travel/' . $proposal->client_travel_id . '/update', [
+
+            $response = $client->request('PATCH', 'http://35.174.5.208:83/api/travel/' . $proposal->client_travel_id . '/update', [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $bearerToken,
                     'Accept' => 'application/json',
                 ],
             ]);
+
+            if ($response->getStatusCode() != 200) {
+                throw new \Exception('Falha ao atualizar a viagem.');
+            }
 
             Proposal::where('client_travel_id', $proposal->client_travel_id)
                 ->where('id_proposal', '!=', $proposal_id)
@@ -274,7 +283,7 @@ class ProposalController extends Controller
             return response()->json([
                 'message' => 'An error has occurred',
                 'error' => $e->getMessage()
-            ]);
+            ], 500);
         }
     }
 
