@@ -257,7 +257,7 @@ class ProposalController extends Controller
             $client = new Client();
             $bearerToken = $request->bearerToken();
 
-            $response = $client->request('PATCH', 'http://35.174.5.208:83/api/travel/' . $proposal->client_travel_id . '/update', [
+            $response = $client->request('PUT', 'http://35.174.5.208:83/api/travel/' . $proposal->client_travel_id . '/update', [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $bearerToken,
                     'Accept' => 'application/json',
