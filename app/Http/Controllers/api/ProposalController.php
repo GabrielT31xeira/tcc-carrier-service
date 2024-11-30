@@ -52,13 +52,13 @@ class ProposalController extends Controller
                 ->join('travel', 'travel_proposal.travel_id', '=', 'travel.id_travel')
                 ->join('output', 'travel.output_id', '=', 'output.id_output')
                 ->join('arrival', 'travel.arrival_id', '=', 'arrival.id_arrival')
-                ->join('vehicle', 'travel.vehicle_id', '=', 'vehicle.id_vehicle')
+                ->join('vehicles', 'travel.vehicle_id', '=', 'vehicles.id_vehicle')
                 ->where('travel.user_id', $user_id)
                 ->select(
                     'proposal.*',
                     'output.city as output_city', 'output.state as output_state', 'output.address as output_address',
                     'arrival.city as arrival_city', 'arrival.state as arrival_state', 'arrival.address as arrival_address',
-                    'vehicle.plate as vehicle_plate', 'vehicle.vehicle_type as vehicle_type', 'vehicle.brand as vehicle_brand', 'vehicle.model as vehicle_model', 'vehicle.model_year as vehicle_model_year'
+                    'vehicles.plate as vehicle_plate', 'vehicles.vehicle_type as vehicle_type', 'vehicles.brand as vehicle_brand', 'vehicles.model as vehicle_model', 'vehicles.model_year as vehicle_model_year'
                 )
                 ->get();
 
