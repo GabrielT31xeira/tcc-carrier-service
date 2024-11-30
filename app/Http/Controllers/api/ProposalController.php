@@ -82,7 +82,7 @@ class ProposalController extends Controller
         }
     }
 
-    public function getTravelProposal($travel_id)
+    public function getTravelProposal(Request $request, $travel_id)
     {
         try {
             $proposals = DB::table('proposal')
@@ -96,9 +96,36 @@ class ProposalController extends Controller
                     'proposal.*',
                     'output.city as output_city', 'output.state as output_state', 'output.address as output_address',
                     'arrival.city as arrival_city', 'arrival.state as arrival_state', 'arrival.address as arrival_address',
-                    'vehicles.plate as vehicle_plate', 'vehicles.vehicle_type as vehicle_type', 'vehicles.brand as vehicle_brand', 'vehicles.model as vehicle_model', 'vehicles.model_year as vehicle_model_year'
+                    'vehicles.plate as vehicle_plate', 'vehicles.vehicle_type as vehicle_type', 'vehicles.brand as vehicle_brand', 'vehicles.model as vehicle_model', 'vehicles.model_year as vehicle_model_year',
+                    'travel.user_id as carrier_user_id'
                 )
                 ->get();
+
+            $bearerToken = $request->bearerToken();
+            $client = new Client();
+
+            $proposals->map(function ($proposal) use ($client, $bearerToken) {
+                if (isset($proposal->carrier_user_id)) {
+                    try {
+                        $response = $client->request('GET', 'http://54.198.88.58:82/api/user/' . $proposal->carrier_user_id, [
+                            'headers' => [
+                                'Authorization' => 'Bearer ' . $bearerToken,
+                                'Accept' => 'application/json',
+                            ],
+                        ]);
+                        if ($response->getStatusCode() == 200) {
+                            $proposal->user = json_decode($response->getBody(), true);
+                        } else {
+                            $proposal->user = ['error' => 'Usuário não encontrado'];
+                        }
+                    } catch (\Exception $e) {
+                        $proposal->user = ['error' => 'Falha ao buscar o usuário'];
+                        \Log::error("Erro ao carregar usuário: {$e->getMessage()}");
+                    }
+                } else {
+                    $proposal->user = null;
+                }
+            });
 
             return response()->json([
                 'proposals' => $proposals,
