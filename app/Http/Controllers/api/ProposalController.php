@@ -216,8 +216,7 @@ class ProposalController extends Controller
         try {
             DB::beginTransaction();
 
-            $travelProposal = TravelProposal::where('proposal_id', '=', $proposal_id)->firstOrFail();
-            $travelProposal->proposal->delete();
+            $travelProposal = Proposal::where('id_proposal', '=', $proposal_id)->firstOrFail();
             $travelProposal->delete();
 
             DB::commit();
