@@ -44,6 +44,18 @@ class ProposalController extends Controller
         }
     }
 
+    public function getUserProposals($user_id)
+    {
+        $proposals = DB::table('proposal')
+            ->join('travel_proposal', 'proposal.id_proposal', '=', 'travel_proposal.proposal_id')
+            ->join('travel', 'travel_proposal.travel_id', '=', 'travel.id_travel')
+            ->where('travel.user_id', $user_id)
+            ->select('proposal.*')
+            ->get();
+
+        return response()->json($proposals);
+    }
+
     public function getCarrierProposal(Request $request, $travel_id)
     {
         try {

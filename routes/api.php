@@ -19,6 +19,7 @@ Route::middleware('verify-token')->group(function () {
     // Travel routes
     Route::prefix('travel')->group(function () {
         Route::get('{user_id}', [\App\Http\Controllers\api\TravelController::class, 'getTravel']);
+        Route::get('{user_id}/proposal', [\App\Http\Controllers\api\ProposalController::class, 'getUserProposals']);
         Route::get('all/{travel_id}', [\App\Http\Controllers\api\TravelController::class, 'getAllTravels']);
         Route::post('{user_id}/store', [\App\Http\Controllers\api\TravelController::class, 'store']);
         Route::delete('{travel_id}', [\App\Http\Controllers\api\TravelController::class, 'deleteTravel']);
