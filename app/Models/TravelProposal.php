@@ -21,4 +21,9 @@ class TravelProposal extends Model
     {
         return $this->belongsTo(Travel::class, 'travel_id', 'id_travel');
     }
+
+    public function proposal(): BelongsTo
+    {
+        return $this->belongsTo(Proposal::class, 'proposal_id', 'id_proposal');
+    }
 }

@@ -50,6 +50,7 @@ class ProposalController extends Controller
             $travelproposals = TravelProposal::where('travel_id', '=', $travel_id)
                 ->with(
                     'carrier',
+                    'proposal',
                     'carrier.vehicle',
                     'carrier.arrival',
                     'carrier.output')

@@ -38,8 +38,4 @@ class Travel extends Model
         return $this->hasOne(Output::class, 'id_output', 'output_id');
     }
 
-    public function proposal(): hasMany
-    {
-        return $this->hasMany(Proposal::class, 'travel_id');
-    }
 }
