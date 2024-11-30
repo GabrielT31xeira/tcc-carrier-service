@@ -114,7 +114,8 @@ class ProposalController extends Controller
                             ],
                         ]);
                         if ($response->getStatusCode() == 200) {
-                            $proposal->user = json_decode($response->getBody(), true);
+                            $user = json_decode($response->getBody(), true);
+                            $proposal->user = $user;
                         } else {
                             $proposal->user = ['error' => 'Usuário não encontrado'];
                         }
