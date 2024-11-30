@@ -211,4 +211,27 @@ class ProposalController extends Controller
         }
     }
 
+    public function deleteProposal($proposal_id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $travelProposal = TravelProposal::where('proposal_id', '=', $proposal_id)->firstOrFail();
+            $travelProposal->proposal->delete();
+            $travelProposal->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Proposta Apagada!',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'An error has occurred',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
 }

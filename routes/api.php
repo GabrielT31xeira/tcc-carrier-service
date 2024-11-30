@@ -30,4 +30,5 @@ Route::middleware('verify-token')->group(function () {
     Route::get('carrier/{travel_id}/proposal', [\App\Http\Controllers\api\ProposalController::class, 'getCarrierProposal']);
     Route::get('client/{client_travel_id}/proposal', [\App\Http\Controllers\api\ProposalController::class, 'getClientProposal']);
     Route::patch('proposal/{id}/accept', [\App\Http\Controllers\api\ProposalController::class, 'acceptProposal']);
+    Route::delete('proposal/{proposal_id}', [\App\Http\Controllers\api\ProposalController::class, 'deleteProposal']);
 });
