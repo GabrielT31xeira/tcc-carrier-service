@@ -41,7 +41,7 @@ class IntercessionController extends Controller
         $token = $request->bearerToken();
 
         // Obtenha as viagens disponíveis
-        $response = $client->request('GET', 'http://35.174.5.208:83/api/all-travel', [
+        $response = $client->request('GET', 'http://3.22.242.99:83/api/all-travel', [
             'headers' => [
                 'Authorization' => 'Bearer ' . $token,
                 'Accept' => 'application/json',
