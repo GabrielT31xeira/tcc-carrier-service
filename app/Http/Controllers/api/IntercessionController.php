@@ -124,7 +124,7 @@ class IntercessionController extends Controller
 
             // Verificar se o aumento é maior que 100 km
             $distanceIncrease = $distanceWithPackage - $originalDistance;
-            return $distanceIncrease <= 700; // Permitir somente pacotes que aumentem até 100 km
+            return $distanceIncrease <= 1000; // Permitir somente pacotes que aumentem até 100 km
         });
 
         // Retornar os pacotes filtrados
