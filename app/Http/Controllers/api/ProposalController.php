@@ -107,7 +107,7 @@ class ProposalController extends Controller
             $proposals->map(function ($proposal) use ($client, $bearerToken) {
                 if (isset($proposal->carrier_user_id)) {
                     try {
-                        $response = $client->request('GET', 'http://54.198.88.58:82/api/user/' . $proposal->carrier_user_id, [
+                        $response = $client->request('GET', 'http://3.137.161.115:82/api/user/' . $proposal->carrier_user_id, [
                             'headers' => [
                                 'Authorization' => 'Bearer ' . $bearerToken,
                                 'Accept' => 'application/json',
@@ -157,7 +157,7 @@ class ProposalController extends Controller
                 if (isset($proposal->carrier->user_id)) {
                     try {
                         $client = new Client();
-                        $response = $client->request('GET', 'http://54.198.88.58:82/api/user/' . $proposal->carrier->user_id, [
+                        $response = $client->request('GET', 'http://3.137.161.115:82/api/user/' . $proposal->carrier->user_id, [
                             'headers' => [
                                 'Authorization' => 'Bearer ' . $bearerToken,
                                 'Accept' => 'application/json',
@@ -206,7 +206,7 @@ class ProposalController extends Controller
                 if (isset($proposal->carrier->user_id)) {
                     try {
                         $client = new Client();
-                        $response = $client->request('GET', 'http://54.198.88.58:82/api/user/' . $proposal->carrier->user_id, [
+                        $response = $client->request('GET', 'http://3.137.161.115:82/api/user/' . $proposal->carrier->user_id, [
                             'headers' => [
                                 'Authorization' => 'Bearer ' . $bearerToken,
                                 'Accept' => 'application/json',
@@ -257,7 +257,7 @@ class ProposalController extends Controller
             $client = new Client();
             $bearerToken = $request->bearerToken();
 
-            $response = $client->request('PUT', 'http://35.174.5.208:83/api/travel/' . $proposal->client_travel_id . '/update', [
+            $response = $client->request('PUT', 'http://3.140.241.147:83/api/travel/' . $proposal->client_travel_id . '/update', [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $bearerToken,
                     'Accept' => 'application/json',
